@@ -1,6 +1,14 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { register, login, getProfile, updateProfile } from '../controllers/auth.controller';
+import { 
+  register, 
+  login, 
+  getProfile, 
+  updateProfile,
+  forgotPassword,
+  resetPassword,
+  verifyEmail
+} from '../controllers/auth.controller';
 import { auth } from '../middleware/auth.middleware';
 
 const router = express.Router();
@@ -40,6 +48,36 @@ router.put(
     body('email').optional().isEmail().withMessage('Please enter a valid email'),
   ],
   updateProfile
+);
+
+// Forgot password route
+router.post(
+  '/forgot-password',
+  [
+    body('email').isEmail().withMessage('Please enter a valid email'),
+  ],
+  forgotPassword
+);
+
+// Reset password route
+router.post(
+  '/reset-password',
+  [
+    body('token').notEmpty().withMessage('Token is required'),
+    body('password')
+      .isLength({ min: 6 })
+      .withMessage('Password must be at least 6 characters long'),
+  ],
+  resetPassword
+);
+
+// Verify email route
+router.post(
+  '/verify-email',
+  [
+    body('token').notEmpty().withMessage('Token is required'),
+  ],
+  verifyEmail
 );
 
 export default router; 
