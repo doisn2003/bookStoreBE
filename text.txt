@@ -1,0 +1,25 @@
+- Người dùng:
+ + Đăng ký tài khoản: Người dùng tạo tài khoản mới bằng cách cung cấp thông tin như tên, email, mật khẩu, và số điện thoại.
++ Đăng nhập: Người dùng đã đăng ký có thể đăng nhập vào tài khoản của họ.
++ Khôi phục mật khẩu: Người dùng có thể khôi phục mật khẩu nếu quên.
++ Chỉnh sửa thông tin cá nhân: Người dùng cập nhật thông tin cá nhân như tên, địa chỉ, và thông tin liên hệ.
++ Xem lịch sử mua hàng: Người dùng có thể xem lại các đơn hàng đã đặt.
++ Danh mục sản phẩm: Sản phẩm được phân loại theo danh mục để người dùng dễ dàng tìm kiếm.
++ Tìm kiếm sản phẩm: Hỗ trợ tìm kiếm bằng từ khóa, bộ lọc theo giá, thương hiệu, và các tiêu chí khác.
++ Chi tiết sản phẩm: Hiển thị thông tin chi tiết về sản phẩm bao gồm mô tả, giá cả, đánh giá, và hình ảnh.
++ Tìm kiếm đơn hàng theo mã đơn hàng: Sau khi người dùng thanh toán hóa đơn, ngay lập tức hệ thống sẽ trả về 1 mã đơn hàng tương ứng với đơn hàng của khách hàng đã đặt. Khách hàng dùng mã đơn hàng này để tìm kiếm đơn hàng của mình.
++ Xem trạng thái của đơn hàng sau khi đã mua hàng.
++ Thêm vào giỏ hàng: Người dùng có thể thêm sản phẩm vào giỏ hàng.
++ Quản lý giỏ hàng: Người dùng có thể cập nhật số lượng sản phẩm hoặc xóa sản phẩm khỏi giỏ hàng.
++ Thanh toán: Hỗ trợ các phương thức thanh toán khác nhau như thẻ tín dụng, ví điện tử, chuyển ngân hàng
++ Đánh giá sản phẩm: Đánh giá sản phẩm đã mua
++ Bình luận: Để lại bình luận hoặc hỏi đáp về sản phẩm đã mua
+- Quản trị viên:
++ Thêm mới và chỉnh sửa sản phẩm: Quản trị viên có thể thêm mới, cập nhật hoặc xóa sản phẩm.
++ Quản lý kho: Theo dõi số lượng tồn kho và thông báo khi sản phẩm sắp hết hàng.
++ Xem và xử lý đơn hàng: Quản trị viên có thể xem chi tiết đơn hàng, cập nhật trạng thái đơn hàng (đã xác nhận, đang vận chuyển, đã giao hàng).
++ Quản lý hoàn trả: Xử lý yêu cầu trả hàng và hoàn tiền.
++ Xem danh sách khách hàng: Quản trị viên có thể xem danh sách khách hàng đã đăng ký và thông tin chi tiết của họ.
++ Quản lý đánh giá và bình luận: Duyệt và quản lý các đánh giá, bình luận từ khách hàng.
++ Báo cáo bán hàng: Thống kê doanh thu, số lượng sản phẩm bán ra, và các báo cáo tài chính khác.
++ Thống kê người dùng: Số lượng người dùng đăng ký mới, số lượng đơn hàng theo người dùng.
