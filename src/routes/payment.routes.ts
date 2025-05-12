@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import {
-  getPaymentById,
-  getPaymentsByOrderId,
+  getPaymentById, 
+  getPaymentsByOrderId, 
   updatePaymentStatus
 } from '../controllers/payment.controller';
 import { PaymentFactory } from '../services/payment.factory';
