@@ -22,7 +22,7 @@ app.use(morgan('dev'));
 
 // Database connection
 mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/bookstore')
+  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/nftshop')
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
