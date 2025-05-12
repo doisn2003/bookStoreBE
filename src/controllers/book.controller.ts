@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-import { Book } from '../models/book.model';
+import { Book, BookCategory } from '../models/book.model';
+import mongoose from 'mongoose';
 
 // Create a new book
 export const createBook = async (req: Request, res: Response) => {
@@ -14,25 +15,100 @@ export const createBook = async (req: Request, res: Response) => {
     await book.save();
 
     res.status(201).json(book);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
   }
 };
 
-// Get all books with pagination
+// Get all books with pagination and advanced filtering
 export const getBooks = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
+    const sortField = (req.query.sortField as string) || 'createdAt';
+    const sortOrder = (req.query.sortOrder as string) === 'asc' ? 1 : -1;
 
-    const books = await Book.find()
+    const filter: any = {};
+
+    // Áp dụng các bộ lọc
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+
+    if (req.query.subCategory) {
+      filter.subCategory = req.query.subCategory;
+    }
+
+    if (req.query.author) {
+      filter.author = { $regex: req.query.author, $options: 'i' };
+    }
+
+    if (req.query.publisher) {
+      filter.publisher = { $regex: req.query.publisher, $options: 'i' };
+    }
+
+    if (req.query.language) {
+      filter.language = req.query.language;
+    }
+
+    // Lọc theo khoảng giá
+    if (req.query.minPrice || req.query.maxPrice) {
+      filter.price = {};
+      if (req.query.minPrice) filter.price.$gte = Number(req.query.minPrice);
+      if (req.query.maxPrice) filter.price.$lte = Number(req.query.maxPrice);
+    }
+
+    // Lọc theo khoảng năm xuất bản
+    if (req.query.minYear || req.query.maxYear) {
+      filter.publishedYear = {};
+      if (req.query.minYear) filter.publishedYear.$gte = Number(req.query.minYear);
+      if (req.query.maxYear) filter.publishedYear.$lte = Number(req.query.maxYear);
+    }
+
+    // Lọc theo rating
+    if (req.query.minRating) {
+      filter.avgRating = { $gte: Number(req.query.minRating) };
+    }
+
+    // Lọc theo các trạng thái đặc biệt
+    if (req.query.isFeatured === 'true') {
+      filter.isFeatured = true;
+    }
+
+    if (req.query.isBestSeller === 'true') {
+      filter.isBestSeller = true;
+    }
+
+    if (req.query.isNewRelease === 'true') {
+      filter.isNewRelease = true;
+    }
+
+    if (req.query.isPopular === 'true') {
+      filter.isPopular = true;
+    }
+
+    if (req.query.inStock === 'true') {
+      filter.stock = { $gt: 0 };
+    }
+
+    // Lọc theo phạm vi ngày phát hành
+    if (req.query.fromDate || req.query.toDate) {
+      filter.releaseDate = {};
+      if (req.query.fromDate) filter.releaseDate.$gte = new Date(req.query.fromDate as string);
+      if (req.query.toDate) filter.releaseDate.$lte = new Date(req.query.toDate as string);
+    }
+
+    const sortOptions: any = {};
+    sortOptions[sortField] = sortOrder;
+
+    const books = await Book.find(filter)
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 });
+      .sort(sortOptions);
 
-    const total = await Book.countDocuments();
+    const total = await Book.countDocuments(filter);
 
     res.json({
       books,
@@ -40,9 +116,9 @@ export const getBooks = async (req: Request, res: Response) => {
       totalPages: Math.ceil(total / limit),
       totalBooks: total,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
   }
 };
 
@@ -51,12 +127,12 @@ export const getBook = async (req: Request, res: Response) => {
   try {
     const book = await Book.findById(req.params.id);
     if (!book) {
-      return res.status(404).json({ message: 'Book not found' });
+      return res.status(404).json({ message: 'Không tìm thấy sách' });
     }
     res.json(book);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
   }
 };
 
@@ -75,13 +151,13 @@ export const updateBook = async (req: Request, res: Response) => {
     );
 
     if (!book) {
-      return res.status(404).json({ message: 'Book not found' });
+      return res.status(404).json({ message: 'Không tìm thấy sách' });
     }
 
     res.json(book);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
   }
 };
 
@@ -90,43 +166,126 @@ export const deleteBook = async (req: Request, res: Response) => {
   try {
     const book = await Book.findByIdAndDelete(req.params.id);
     if (!book) {
-      return res.status(404).json({ message: 'Book not found' });
+      return res.status(404).json({ message: 'Không tìm thấy sách' });
     }
-    res.json({ message: 'Book deleted successfully' });
-  } catch (error) {
+    res.json({ message: 'Xóa sách thành công' });
+  } catch (error: any) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
   }
 };
 
 // Search books
 export const searchBooks = async (req: Request, res: Response) => {
   try {
-    const { query, category, minPrice, maxPrice } = req.query;
-    const searchQuery: any = {};
+    const { query } = req.query;
+    let searchQuery: any = {};
 
     if (query) {
-      searchQuery.$or = [
-        { title: { $regex: query, $options: 'i' } },
-        { author: { $regex: query, $options: 'i' } },
-        { description: { $regex: query, $options: 'i' } },
-      ];
+      searchQuery = { $text: { $search: query as string } };
     }
 
-    if (category) {
-      searchQuery.category = category;
-    }
-
-    if (minPrice || maxPrice) {
-      searchQuery.price = {};
-      if (minPrice) searchQuery.price.$gte = Number(minPrice);
-      if (maxPrice) searchQuery.price.$lte = Number(maxPrice);
-    }
-
-    const books = await Book.find(searchQuery).sort({ createdAt: -1 });
+    const books = await Book.find(searchQuery)
+      .sort({ score: { $meta: 'textScore' } });
+    
     res.json(books);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
+  }
+};
+
+// Get book categories
+export const getBookCategories = async (req: Request, res: Response) => {
+  try {
+    const categories = Object.values(BookCategory);
+    res.json(categories);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
+  }
+};
+
+// Get featured books
+export const getFeaturedBooks = async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 8;
+    const books = await Book.find({ isFeatured: true })
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    
+    res.json(books);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
+  }
+};
+
+// Get best seller books
+export const getBestSellerBooks = async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 8;
+    const books = await Book.find({ isBestSeller: true })
+      .limit(limit)
+      .sort({ salesCount: -1 });
+    
+    res.json(books);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
+  }
+};
+
+// Get new release books
+export const getNewReleaseBooks = async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 8;
+    
+    // Lấy sách phát hành trong 30 ngày qua
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const books = await Book.find({ 
+      releaseDate: { $gte: thirtyDaysAgo }
+    })
+      .limit(limit)
+      .sort({ releaseDate: -1 });
+    
+    res.json(books);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
+  }
+};
+
+// Get popular books
+export const getPopularBooks = async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 8;
+    const books = await Book.find({ isPopular: true })
+      .limit(limit)
+      .sort({ avgRating: -1 });
+    
+    res.json(books);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
+  }
+};
+
+// Get books by category
+export const getBooksByCategory = async (req: Request, res: Response) => {
+  try {
+    const { category } = req.params;
+    const limit = parseInt(req.query.limit as string) || 8;
+    
+    const books = await Book.find({ category })
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    
+    res.json(books);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
   }
 }; 
