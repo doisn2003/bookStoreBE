@@ -7,6 +7,11 @@ export interface IUser extends Document {
   name: string;
   role: 'user' | 'admin';
   comparePassword(candidatePassword: string): Promise<boolean>;
+  isVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpires?: Date;
+  resetToken?: string;
+  resetTokenExpires?: Date;
 }
 
 const userSchema = new Schema<IUser>(
@@ -32,6 +37,26 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ['user', 'admin'],
       default: 'user',
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+      required: false,
+    },
+    verificationTokenExpires: {
+      type: Date,
+      required: false,
+    },
+    resetToken: {
+      type: String,
+      required: false,
+    },
+    resetTokenExpires: {
+      type: Date,
+      required: false,
     },
   },
   {
