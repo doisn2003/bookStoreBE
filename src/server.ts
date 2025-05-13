@@ -7,6 +7,10 @@ import mongoose from 'mongoose';
 // Routes
 import authRoutes from './routes/auth.routes';
 import nftRoutes from './routes/nft.routes';
+import bookRoutes from './routes/book.routes';
+import orderRoutes from './routes/order.routes';
+import categoryRoutes from './routes/category.routes';
+
 
 dotenv.config();
 
@@ -27,6 +31,10 @@ mongoose
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/nfts', nftRoutes);
+app.use('/api/books', bookRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/categories', categoryRoutes);
+
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
