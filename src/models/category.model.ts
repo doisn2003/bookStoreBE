@@ -12,6 +12,23 @@ export interface ICategory extends Document {
   featuredBooks?: mongoose.Types.ObjectId[];
 }
 
+// Enum danh mục chính dựa trên books_database.json
+export enum MainCategory {
+  FICTION = 'Fiction',
+  NON_FICTION = 'Non-Fiction',
+  SCIENCE_FICTION = 'Science Fiction',
+  BIOGRAPHY = 'Biography'
+}
+
+// Enum ngôn ngữ sách dựa trên books_database.json
+export enum BookLanguage {
+  ENGLISH = 'English',
+  SPANISH = 'Spanish',
+  FRENCH = 'French',
+  GERMAN = 'German',
+  VIETNAMESE = 'Vietnamese'
+}
+
 const categorySchema = new Schema<ICategory>(
   {
     name: {

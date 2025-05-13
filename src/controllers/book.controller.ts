@@ -69,7 +69,7 @@ export const getBooks = async (req: Request, res: Response) => {
 
     // Lọc theo rating
     if (req.query.minRating) {
-      filter.avgRating = { $gte: Number(req.query.minRating) };
+      filter.rating = { $gte: Number(req.query.minRating) };
     }
 
     // Lọc theo các trạng thái đặc biệt
@@ -240,16 +240,9 @@ export const getBestSellerBooks = async (req: Request, res: Response) => {
 export const getNewReleaseBooks = async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 8;
-    
-    // Lấy sách phát hành trong 30 ngày qua
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const books = await Book.find({ 
-      releaseDate: { $gte: thirtyDaysAgo }
-    })
+    const books = await Book.find({ isNewRelease: true })
       .limit(limit)
-      .sort({ releaseDate: -1 });
+      .sort({ createdAt: -1 });
     
     res.json(books);
   } catch (error: any) {
@@ -264,7 +257,7 @@ export const getPopularBooks = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 8;
     const books = await Book.find({ isPopular: true })
       .limit(limit)
-      .sort({ avgRating: -1 });
+      .sort({ rating: -1 });
     
     res.json(books);
   } catch (error: any) {

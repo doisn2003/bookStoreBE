@@ -12,6 +12,9 @@ const mongoose_1 = __importDefault(require("mongoose"));
 // Routes
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const nft_routes_1 = __importDefault(require("./routes/nft.routes"));
+const book_routes_1 = __importDefault(require("./routes/book.routes"));
+const order_routes_1 = __importDefault(require("./routes/order.routes"));
+const category_routes_1 = __importDefault(require("./routes/category.routes"));
 dotenv_1.default.config();
 exports.app = (0, express_1.default)();
 const port = process.env.PORT || 5000;
@@ -27,6 +30,9 @@ mongoose_1.default
 // Routes
 exports.app.use('/api/auth', auth_routes_1.default);
 exports.app.use('/api/nfts', nft_routes_1.default);
+exports.app.use('/api/books', book_routes_1.default);
+exports.app.use('/api/orders', order_routes_1.default);
+exports.app.use('/api/categories', category_routes_1.default);
 // Error handling middleware
 exports.app.use((err, req, res, next) => {
     console.error(err.stack);

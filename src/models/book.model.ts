@@ -5,49 +5,41 @@ export interface IBook extends Document {
   author: string;
   description: string;
   price: number;
-  coverImage: string;
+  imageUrl: string;
   category: string;
-  subCategory?: string;
-  stock: number;
-  isbn: string;
-  publishedYear: number;
-  publisher?: string;
+  discount?: number;
+  rating?: number;
   language?: string;
   pages?: number;
-  discount?: number;
-  ratings?: {
-    rating: number;
-    comment: string;
-    user: mongoose.Types.ObjectId;
-    createdAt: Date;
-  }[];
-  avgRating?: number;
-  // Thêm các trường để phân loại hiển thị trên frontend
+  publisher?: string;
+  publishedDate?: string;
+  // Giữ lại các trường cần thiết khác
+  stock?: number;
+  isbn?: string;
+  subCategory?: string;
   isFeatured?: boolean;
   isBestSeller?: boolean;
   isNewRelease?: boolean;
   isPopular?: boolean;
-  // Thêm trường để theo dõi số lượng bán
   salesCount?: number;
-  // Thêm ngày phát hành chính xác
-  releaseDate?: Date;
 }
 
-// Định nghĩa các danh mục sách
+// Định nghĩa các danh mục sách dựa trên books_database.json
 export enum BookCategory {
-  FICTION = 'fiction',
-  NON_FICTION = 'non-fiction',
-  COMICS = 'comics',
-  LAW = 'law',
-  NOVEL = 'novel',
-  EDUCATION = 'education',
-  CHILDREN = 'children',
-  BIOGRAPHY = 'biography',
-  HISTORY = 'history',
-  SCIENCE = 'science',
-  TECHNOLOGY = 'technology',
-  ART = 'art',
-  OTHER = 'other'
+  FICTION = 'Fiction',
+  NON_FICTION = 'Non-Fiction',
+  SCIENCE_FICTION = 'Science Fiction',
+  BIOGRAPHY = 'Biography',
+  COMICS = 'Comics',
+  LAW = 'Law',
+  NOVEL = 'Novel',
+  EDUCATION = 'Education',
+  CHILDREN = 'Children',
+  HISTORY = 'History',
+  SCIENCE = 'Science',
+  TECHNOLOGY = 'Technology',
+  ART = 'Art',
+  OTHER = 'Other'
 }
 
 const bookSchema = new Schema<IBook>(
@@ -73,7 +65,7 @@ const bookSchema = new Schema<IBook>(
       required: true,
       min: 0,
     },
-    coverImage: {
+    imageUrl: {
       type: String,
       required: true,
     },
@@ -91,19 +83,18 @@ const bookSchema = new Schema<IBook>(
     },
     stock: {
       type: Number,
-      required: true,
       min: 0,
       default: 0,
     },
     isbn: {
       type: String,
-      required: true,
-      unique: true,
       trim: true,
     },
-    publishedYear: {
+    rating: {
       type: Number,
-      required: true,
+      min: 0,
+      max: 5,
+      default: 0,
     },
     publisher: {
       type: String,
@@ -112,7 +103,7 @@ const bookSchema = new Schema<IBook>(
     language: {
       type: String,
       trim: true,
-      default: 'Vietnamese',
+      default: 'English',
     },
     pages: {
       type: Number,
@@ -124,35 +115,11 @@ const bookSchema = new Schema<IBook>(
       max: 100,
       default: 0,
     },
-    ratings: [
-      {
-        rating: {
-          type: Number,
-          min: 1,
-          max: 5,
-          required: true,
-        },
-        comment: {
-          type: String,
-        },
-        user: {
-          type: Schema.Types.ObjectId,
-          ref: 'User',
-          required: true,
-        },
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-    avgRating: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0,
+    publishedDate: {
+      type: String,
+      trim: true,
     },
-    // Thêm các trường để phân loại hiển thị
+    // Giữ lại các trường phân loại hiển thị
     isFeatured: {
       type: Boolean,
       default: false,
@@ -177,11 +144,6 @@ const bookSchema = new Schema<IBook>(
       type: Number,
       default: 0,
       index: true,
-    },
-    releaseDate: {
-      type: Date,
-      default: Date.now,
-      index: true,
     }
   },
   {
@@ -189,29 +151,25 @@ const bookSchema = new Schema<IBook>(
   }
 );
 
-// Middleware to calculate average rating before saving
-bookSchema.pre('save', function (next) {
-  if (this.ratings && this.ratings.length > 0) {
-    const totalRating = this.ratings.reduce((sum, item) => sum + item.rating, 0);
-    this.avgRating = totalRating / this.ratings.length;
-  }
-  
-  // Tự động phân loại sách là mới nếu phát hành trong vòng 30 ngày
-  if (this.releaseDate) {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    this.isNewRelease = this.releaseDate >= thirtyDaysAgo;
-  }
-  
-  next();
-});
-
 // Middleware để tự động cập nhật bestSeller dựa trên salesCount
 bookSchema.pre('save', function (next) {
   if (this.isModified('salesCount') && this.salesCount) {
     // Nếu số lượng bán >= 100, đánh dấu là best seller
     this.isBestSeller = this.salesCount >= 100;
   }
+  
+  // Tự động phân loại sách là mới nếu được thêm vào gần đây
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  // Kiểm tra nếu là document mới
+  if (this.isNew) {
+    this.isNewRelease = true;
+  } else {
+    // Đơn giản hóa kiểm tra ngày
+    this.isNewRelease = false;
+  }
+  
   next();
 });
 

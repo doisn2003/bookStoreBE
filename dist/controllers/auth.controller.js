@@ -22,20 +22,14 @@ const register = async (req, res) => {
         if (user) {
             return res.status(400).json({ message: 'User already exists' });
         }
-        // Generate verification token
-        const verificationToken = crypto_1.default.randomBytes(32).toString('hex');
-        const verificationTokenExpires = new Date(Date.now() + 24 * 3600000); // 24 hours
-        // Create new user
+        // Create new user without verification
         user = new user_model_1.User({
             email,
             password,
             name,
-            verificationToken,
-            verificationTokenExpires,
+            isVerified: true // Set to true for testing
         });
         await user.save();
-        // Send verification email
-        await (0, email_service_1.sendVerificationEmail)(email, verificationToken);
         // Generate JWT token
         const token = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '7d' });
         res.status(201).json({
