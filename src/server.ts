@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import authRoutes from './routes/auth.routes';
 import bookRoutes from './routes/book.routes';
 import orderRoutes from './routes/order.routes';
+import categoryRoutes from './routes/category.routes';
 
 dotenv.config();
 
@@ -21,7 +22,7 @@ app.use(morgan('dev'));
 
 // Database connection
 mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/bookstore')
+  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/nftshop')
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
@@ -29,6 +30,12 @@ mongoose
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/categories', categoryRoutes);
+
+// Basic route for testing
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to Bookstore API' });
+});
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
