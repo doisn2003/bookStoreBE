@@ -10,6 +10,7 @@ import nftRoutes from './routes/nft.routes';
 import bookRoutes from './routes/book.routes';
 import orderRoutes from './routes/order.routes';
 import categoryRoutes from './routes/category.routes';
+import cartRoutes from './routes/cart.routes';
 
 
 dotenv.config();
@@ -34,6 +35,7 @@ app.use('/api/nfts', nftRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/cart', cartRoutes);
 
 
 // Error handling middleware
