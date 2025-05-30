@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiểm tra Thanh Toán ETH</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .error {
+            color: #cc0000;
+            font-weight: bold;
+        }
+        .success {
+            color: #007e33;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kiểm tra Thanh Toán ETH</h1>
+        
+        <div class="form-group">
+            <button id="connectMetaMask">Kết nối MetaMask</button>
+            <div id="accountInfo"></div>
+        </div>
+        
+        <h2>1. Nhập thông tin thanh toán</h2>
+        <div class="form-group">
+            <label for="orderId">Mã đơn hàng:</label>
+            <input type="text" id="orderId" value="68387d874dae04dfa643c9b7">
+        </div>
+        <div class="form-group">
+            <label for="bookId">Mã sách:</label>
+            <input type="text" id="bookId" value="6646bc21d01904e9ae8320d2">
+        </div>
+        <div class="form-group">
+            <label for="token">Token (Bearer):</label>
+            <input type="text" id="token" placeholder="Nhập token xác thực của bạn">
+        </div>
+        <div class="form-group">
+            <button id="createPayment">Tạo thanh toán</button>
+        </div>
+        
+        <div id="paymentInfo" class="result"></div>
+    </div>
+
+    <script>
+        let userAccount = null;
+        let paymentData = null;
+
+        // Kiểm tra và kết nối MetaMask
+        document.getElementById('connectMetaMask').addEventListener('click', async () => {
+            const accountInfo = document.getElementById('accountInfo');
+            
+            if (typeof window.ethereum === 'undefined') {
+                accountInfo.innerHTML = '<p class="error">Vui lòng cài đặt MetaMask để tiếp tục!</p>';
+                return;
+            }
+            
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                userAccount = accounts[0];
+                accountInfo.innerHTML = `<p class="success">Đã kết nối: ${userAccount}</p>`;
+            } catch (error) {
+                console.error("Lỗi kết nối MetaMask:", error);
+                accountInfo.innerHTML = `<p class="error">Lỗi kết nối MetaMask: ${error.message}</p>`;
+            }
+        });
+
+        // Tạo thanh toán ETH
+        document.getElementById('createPayment').addEventListener('click', async () => {
+            const paymentInfo = document.getElementById('paymentInfo');
+            const orderId = document.getElementById('orderId').value;
+            const bookId = document.getElementById('bookId').value;
+            const token = document.getElementById('token').value;
+            
+            if (!userAccount) {
+                paymentInfo.innerHTML = '<p class="error">Vui lòng kết nối MetaMask trước!</p>';
+                return;
+            }
+            
+            if (!token) {
+                paymentInfo.innerHTML = '<p class="error">Vui lòng nhập token xác thực!</p>';
+                return;
+            }
+
+            try {
+                paymentInfo.innerHTML = '<p>Đang gửi yêu cầu tạo thanh toán...</p>';
+                
+                // Gọi API tạo thanh toán
+                const response = await fetch('http://localhost:5000/api/payments/ethereum', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        orderId,
+                        bookId,
+                        userAddress: userAccount
+                    })
+                });
+
+                const data = await response.json();
+                console.log("API Response:", data);
+                
+                if (data.success) {
+                    paymentData = data.data;
+                    paymentInfo.innerHTML = `
+                        <h3 class="success">Tạo thanh toán thành công!</h3>
+                        <p>Mã thanh toán: ${paymentData.payment._id}</p>
+                        <p>Số tiền: ${paymentData.payment.amount}</p>
+                        <p>Địa chỉ hợp đồng: ${paymentData.ethereum.contractAddress}</p>
+                        <button id="sendTransaction">Gửi giao dịch</button>
+                    `;
+                    
+                    document.getElementById('sendTransaction').addEventListener('click', sendTransaction);
+                } else {
+                    paymentInfo.innerHTML = `<p class="error">Lỗi: ${data.message}</p>`;
+                    if (data.error) {
+                        paymentInfo.innerHTML += `<p class="error">Chi tiết: ${data.error}</p>`;
+                    }
+                }
+            } catch (error) {
+                console.error("Lỗi tạo thanh toán:", error);
+                paymentInfo.innerHTML = `<p class="error">Lỗi tạo thanh toán: ${error.message}</p>`;
+            }
+        });
+
+        // Gửi giao dịch ETH
+        async function sendTransaction() {
+            const paymentInfo = document.getElementById('paymentInfo');
+            
+            try {
+                paymentInfo.innerHTML += '<p>Đang chuẩn bị giao dịch...</p>';
+                
+                // Parse số tiền ETH từ chuỗi
+                let amountInEth = paymentData.ethereum.orderAmount;
+                // Chuyển đổi số tiền thành wei (1 ETH = 10^18 wei)
+                let amountInWei = BigInt(Math.round(parseFloat(amountInEth) * 1e18)).toString(16);
+                // Thêm tiền tố '0x' 
+                amountInWei = '0x' + amountInWei;
+                
+                const transactionParameters = {
+                    to: paymentData.ethereum.contractAddress,
+                    from: userAccount,
+                    value: amountInWei, // Số tiền dưới dạng hexadecimal
+                    data: paymentData.ethereum.transactionData
+                };
+                
+                console.log("Transaction Parameters:", transactionParameters);
+                
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [transactionParameters],
+                });
+                
+                paymentInfo.innerHTML += `
+                    <p class="success">Giao dịch đã được gửi!</p>
+                    <p>Transaction Hash: ${txHash}</p>
+                    <button id="confirmPayment">Xác nhận thanh toán</button>
+                `;
+                
+                document.getElementById('confirmPayment').addEventListener('click', () => {
+                    confirmPayment(paymentData.payment._id, txHash);
+                });
+            } catch (error) {
+                console.error("Lỗi gửi giao dịch:", error);
+                paymentInfo.innerHTML += `<p class="error">Lỗi gửi giao dịch: ${error.message}</p>`;
+            }
+        }
+
+        // Xác nhận thanh toán
+        async function confirmPayment(paymentId, txHash) {
+            const paymentInfo = document.getElementById('paymentInfo');
+            const token = document.getElementById('token').value;
+            
+            try {
+                paymentInfo.innerHTML += '<p>Đang xác nhận thanh toán...</p>';
+                
+                const response = await fetch(`http://localhost:5000/api/payments/ethereum/${paymentId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        transactionHash: txHash
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    paymentInfo.innerHTML += `
+                        <p class="success">Thanh toán thành công!</p>
+                        <p>Trạng thái: ${data.data.status}</p>
+                    `;
+                } else {
+                    paymentInfo.innerHTML += `<p class="error">Lỗi xác nhận: ${data.message}</p>`;
+                }
+            } catch (error) {
+                console.error("Lỗi xác nhận thanh toán:", error);
+                paymentInfo.innerHTML += `<p class="error">Lỗi xác nhận thanh toán: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -20,13 +20,13 @@ export const createOrder = async (req: Request, res: Response) => {
     const { items, shippingAddress, paymentMethod } = req.body;
     let totalAmount = 0;
 
-    // Calculate total amount and verify stock
+    // Calculate total amount and verify stock  
     for (const item of items) {
       const book = await Book.findById(item.book);
       if (!book) {
         return res.status(404).json({ message: `Không tìm thấy sách: ${item.book}` });
       }
-      if (book.stock < item.quantity) {
+      if (book?.stock && book.stock < item.quantity) {
         return res.status(400).json({ message: `Số lượng sách không đủ: ${book.title}` });
       }
       
@@ -81,22 +81,22 @@ export const createOrderFromCart = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Giỏ hàng trống' });
     }
 
-    // Kiểm tra số lượng tồn kho của tất cả sản phẩm
-    for (const item of cart.items) {
-      const book = await Book.findById(item.book);
-      if (!book) {
-        return res.status(404).json({ 
-          message: `Không tìm thấy sách có ID: ${item.book}` 
-        });
-      }
+    // // Kiểm tra số lượng tồn kho của tất cả sản phẩm
+    // for (const item of cart.items) {
+    //   const book = await Book.findById(item.book);
+    //   if (!book) {
+    //     return res.status(404).json({ 
+    //       message: `Không tìm thấy sách có ID: ${item.book}` 
+    //     });
+    //   }
 
-      if (book.stock < item.quantity) {
-        return res.status(400).json({ 
-          message: `Sách "${book.title}" chỉ còn ${book.stock} quyển trong kho`, 
-          bookId: book._id
-        });
-      }
-    }
+    //   if (book.stock < item.quantity) {
+    //     return res.status(400).json({ 
+    //       message: `Sách "${book.title}" chỉ còn ${book.stock} quyển trong kho`, 
+    //       bookId: book._id
+    //     });
+    //   }
+    // }
 
     // Tạo đơn hàng mới
     const order = new Order({

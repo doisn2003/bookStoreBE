@@ -42,13 +42,13 @@ export const addToCart = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Không tìm thấy sách' });
     }
 
-    // Kiểm tra số lượng tồn kho
     if (book.stock < quantity) {
       return res.status(400).json({ 
         message: 'Số lượng sách trong kho không đủ',
         availableStock: book.stock
       });
-    }
+    }// Kiểm tra số lượng tồn kho
+    
 
     // Tính giá sau khi giảm giá (nếu có)
     const priceAfterDiscount = book.discount 
