@@ -290,7 +290,7 @@ export const cancelPayment = async (req: Request, res: Response) => {
  */
 export const createEthereumPayment = async (req: Request, res: Response) => {
   try {
-    const { orderId, bookId, userAddress } = req.body;
+    const { orderId, userAddress } = req.body;
 
     // Kiểm tra đơn hàng tồn tại
     const order = await Order.findById(orderId);
@@ -300,31 +300,9 @@ export const createEthereumPayment = async (req: Request, res: Response) => {
 
     // Tạo mã giao dịch
     const transactionId = generateTransactionId('ETH');
-
-    // Xác định bookId chính xác
-    let actualBookId;
-    if (bookId) {
-      actualBookId = bookId;
-    } else if (order.items && order.items.length > 0) {
-      // Kiểm tra xem book là ObjectId hay object đầy đủ
-      const firstItem = order.items[0];
-      if (firstItem.book && typeof firstItem.book === 'object' && '_id' in firstItem.book) {
-        actualBookId = firstItem.book._id;
-      } else {
-        actualBookId = firstItem.book;
-      }
-    } else {
-      return res.status(400).json({ success: false, message: 'Không tìm thấy thông tin sách' });
-    }
     
-    if (!actualBookId) {
-      return res.status(400).json({ success: false, message: 'Không tìm thấy thông tin sách' });
-    }
-
-    console.log('Tạo giao dịch với bookId:', actualBookId, 'và orderId:', orderId);
-
     // Tạo transaction data cho Ethereum
-    const ethereumTx = await createEthereumTransaction(actualBookId.toString(), orderId);
+    const ethereumTx = await createEthereumTransaction(orderId);
 
     // Tạo thanh toán mới
     const payment = new Payment({

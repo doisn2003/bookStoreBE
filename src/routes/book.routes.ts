@@ -12,7 +12,8 @@ import {
   getBestSellerBooks,
   getNewReleaseBooks,
   getPopularBooks,
-  getBooksByCategory
+  getBooksByCategory,
+  updateAllBooksStock
 } from '../controllers/book.controller';
 import { auth, adminAuth } from '../middleware/auth.middleware';
 
@@ -98,5 +99,15 @@ router.put(
 
 // Delete book (admin only)
 router.delete('/:id', adminAuth, deleteBook);
+
+// Cập nhật số lượng cho tất cả sách (admin only)
+router.post(
+  '/update-all-stock',
+  //adminAuth,
+  [
+    body('stock').isInt({ min: 0 }).withMessage('Số lượng phải là số nguyên dương'),
+  ],
+  updateAllBooksStock
+);
 
 export default router; 

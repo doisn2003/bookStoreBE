@@ -3,8 +3,16 @@ import fs from 'fs';
 import path from 'path';
 import { Book } from '../models/book.model';
 import * as dotenv from 'dotenv';
+import mongoose from 'mongoose';
 
-dotenv.config();
+// Load dotenv từ thư mục gốc
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Debug
+console.log('ENV trong ethereum.service:', {
+  privateKey: process.env.PRIVATE_KEY ? 'Được cài đặt (ẩn)' : 'Không tìm thấy',
+  rpcUrl: process.env.ETHEREUM_RPC_URL
+});
 
 // Đọc ABI của contract
 const getContractABI = () => {
@@ -69,18 +77,23 @@ const getContract = () => {
 
 const getSignerContract = () => {
   const provider = getProvider();
-  const privateKey = process.env.PRIVATE_KEY;
   
-  if (!privateKey) {
-    throw new Error('Private key is not configured');
+  // Hardcode private key cho môi trường dev (CHỈ DÙNG CHO MỤC ĐÍCH TEST)
+  const privateKey = process.env.PRIVATE_KEY || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+  
+  console.log('Checking private key in getSignerContract:', privateKey ? 'Có private key' : 'Không có private key');
+  
+  try {
+    const signer = new ethers.Wallet(privateKey, provider);
+    const contractABI = getContractABI();
+    const contractAddress = getContractAddress();
+    
+    // Khởi tạo contract với signer để gửi transaction
+    return new ethers.Contract(contractAddress, contractABI, signer);
+  } catch (error) {
+    console.error('Error creating signer contract:', error);
+    throw error;
   }
-  
-  const signer = new ethers.Wallet(privateKey, provider);
-  const contractABI = getContractABI();
-  const contractAddress = getContractAddress();
-  
-  // Khởi tạo contract với signer để gửi transaction
-  return new ethers.Contract(contractAddress, contractABI, signer);
 };
 
 // Chuyển đổi VND sang ETH
@@ -95,7 +108,6 @@ const convertVNDToETH = async (amountInVND: number): Promise<string> => {
 
 // Tạo transaction data cho frontend
 export const createEthereumTransaction = async (
-  bookId: string,
   orderId: string
 ): Promise<{
   orderAmount: string;
@@ -103,14 +115,19 @@ export const createEthereumTransaction = async (
   transactionData: string;
 }> => {
   try {
-    // Lấy thông tin sách từ database
-    const book = await Book.findById(bookId);
-    if (!book) {
-      throw new Error('Book not found');
+    // Lấy thông tin đơn hàng trực tiếp
+    const Order = mongoose.model('Order');
+    const order = await Order.findById(orderId);
+    
+    if (!order) {
+      throw new Error('Order not found');
     }
     
+    // Lấy tổng tiền đơn hàng
+    const totalAmount = order.totalAmount;
+    
     // Chuyển đổi giá tiền từ VND sang ETH
-    const priceInETH = await convertVNDToETH(book.price);
+    const priceInETH = await convertVNDToETH(totalAmount);
     
     // Lấy contract instance với quyền ghi
     const contract = getSignerContract();
