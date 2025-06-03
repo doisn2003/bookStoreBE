@@ -10,7 +10,8 @@ import {
 } from '../services/payment.service';
 import {
   createEthereumTransaction,
-  verifyEthereumTransaction
+  verifyEthereumTransaction,
+  getHardhatAccounts
 } from '../services/ethereum.service';
 
 /**
@@ -301,8 +302,8 @@ export const createEthereumPayment = async (req: Request, res: Response) => {
     // Tạo mã giao dịch
     const transactionId = generateTransactionId('ETH');
     
-    // Tạo transaction data cho Ethereum
-    const ethereumTx = await createEthereumTransaction(orderId);
+    // Tạo transaction data cho Ethereum - truyền userAddress để biết đây là tài khoản nào
+    const ethereumTx = await createEthereumTransaction(orderId, userAddress);
 
     // Tạo thanh toán mới
     const payment = new Payment({
@@ -402,6 +403,28 @@ export const confirmEthereumPayment = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Đã xảy ra lỗi khi xác nhận thanh toán Ethereum',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Lấy danh sách các tài khoản Hardhat (chỉ dùng cho môi trường test)
+ */
+export const getTestAccounts = async (req: Request, res: Response) => {
+  try {
+    const accounts = getHardhatAccounts();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Lấy danh sách tài khoản test thành công',
+      data: accounts
+    });
+  } catch (error: any) {
+    console.error('Error getting test accounts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Đã xảy ra lỗi khi lấy danh sách tài khoản test',
       error: error.message
     });
   }

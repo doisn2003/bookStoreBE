@@ -7,7 +7,8 @@ import {
   getUserPayments,
   cancelPayment,
   createEthereumPayment,
-  confirmEthereumPayment
+  confirmEthereumPayment,
+  getTestAccounts
 } from '../controllers/payment.controller';
 import { verifyToken } from '../middleware/auth';
 
@@ -68,5 +69,12 @@ router.post('/ethereum', createEthereumPayment);
  * @access Public - cho phép test dễ dàng
  */
 router.post('/ethereum/:paymentId', confirmEthereumPayment);
+
+/**
+ * @route GET /api/payments/ethereum/test-accounts
+ * @desc Lấy danh sách tài khoản test (chỉ dùng cho môi trường dev)
+ * @access Public - cho phép test dễ dàng
+ */
+router.get('/ethereum/test-accounts', getTestAccounts);
 
 export default router; 

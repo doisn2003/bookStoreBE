@@ -10,9 +10,32 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // Debug
 console.log('ENV trong ethereum.service:', {
-  privateKey: process.env.PRIVATE_KEY ? 'Được cài đặt (ẩn)' : 'Không tìm thấy',
-  rpcUrl: process.env.ETHEREUM_RPC_URL
+  rpcUrl: process.env.ETHEREUM_RPC_URL || 'http://localhost:8545'
 });
+
+// Danh sách các tài khoản mặc định của Hardhat node (chỉ dùng cho môi trường test)
+const HARDHAT_ACCOUNTS = [
+  {
+    address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+    privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+  },
+  {
+    address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+    privateKey: '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d'
+  },
+  {
+    address: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+    privateKey: '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a'
+  },
+  {
+    address: '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
+    privateKey: '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6'
+  },
+  {
+    address: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
+    privateKey: '0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a'
+  }
+];
 
 // Đọc ABI của contract
 const getContractABI = () => {
@@ -66,6 +89,24 @@ const getProvider = () => {
   return new ethers.JsonRpcProvider(rpcUrl);
 };
 
+// Lấy private key tương ứng với địa chỉ ví
+const getPrivateKeyForAddress = (userAddress: string): string => {
+  // Chuẩn hóa địa chỉ người dùng
+  const normalizedUserAddress = userAddress.toLowerCase();
+  
+  // Tìm tài khoản tương ứng trong danh sách Hardhat accounts
+  const account = HARDHAT_ACCOUNTS.find(acc => 
+    acc.address.toLowerCase() === normalizedUserAddress
+  );
+
+  if (account) {
+    return account.privateKey;
+  }
+  
+  // Sử dụng private key mặc định nếu không tìm thấy
+  return HARDHAT_ACCOUNTS[0].privateKey;
+};
+
 const getContract = () => {
   const provider = getProvider();
   const contractABI = getContractABI();
@@ -75,13 +116,20 @@ const getContract = () => {
   return new ethers.Contract(contractAddress, contractABI, provider);
 };
 
-const getSignerContract = () => {
+const getSignerContract = (userAddress?: string) => {
   const provider = getProvider();
   
-  // Hardcode private key cho môi trường dev (CHỈ DÙNG CHO MỤC ĐÍCH TEST)
-  const privateKey = process.env.PRIVATE_KEY || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+  // Lấy private key tương ứng với địa chỉ người dùng hoặc sử dụng key mặc định
+  let privateKey;
   
-  console.log('Checking private key in getSignerContract:', privateKey ? 'Có private key' : 'Không có private key');
+  if (userAddress) {
+    privateKey = getPrivateKeyForAddress(userAddress);
+  } else {
+    // Sử dụng private key mặc định (owner của contract)
+    privateKey = HARDHAT_ACCOUNTS[0].privateKey;
+  }
+  
+  console.log('Using account address:', userAddress || HARDHAT_ACCOUNTS[0].address);
   
   try {
     const signer = new ethers.Wallet(privateKey, provider);
@@ -108,7 +156,8 @@ const convertVNDToETH = async (amountInVND: number): Promise<string> => {
 
 // Tạo transaction data cho frontend
 export const createEthereumTransaction = async (
-  orderId: string
+  orderId: string,
+  userAddress?: string
 ): Promise<{
   orderAmount: string;
   contractAddress: string;
@@ -129,8 +178,8 @@ export const createEthereumTransaction = async (
     // Chuyển đổi giá tiền từ VND sang ETH
     const priceInETH = await convertVNDToETH(totalAmount);
     
-    // Lấy contract instance với quyền ghi
-    const contract = getSignerContract();
+    // Lấy contract instance với quyền ghi (sử dụng tài khoản admin/owner)
+    const contract = getSignerContract(); // Sử dụng tài khoản mặc định để thiết lập giá
     
     // Đặt giá trị đơn hàng vào contract
     const tx = await contract.setOrderAmount(
@@ -187,4 +236,12 @@ export const verifyEthereumTransaction = async (
     console.error('Error verifying transaction:', error);
     return false;
   }
+};
+
+// Lấy thông tin tài khoản hardhat cho frontend
+export const getHardhatAccounts = () => {
+  // Chỉ trả về địa chỉ, không trả về private key
+  return HARDHAT_ACCOUNTS.map(account => ({
+    address: account.address
+  }));
 }; 
