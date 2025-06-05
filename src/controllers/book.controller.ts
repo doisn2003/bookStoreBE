@@ -281,4 +281,39 @@ export const getBooksByCategory = async (req: Request, res: Response) => {
     console.error(error);
     res.status(500).json({ message: error.message || 'Lỗi máy chủ' });
   }
+};
+
+// Cập nhật số lượng cho tất cả sách
+export const updateAllBooksStock = async (req: Request, res: Response) => {
+  try {
+    const { stock } = req.body;
+    
+    // Kiểm tra giá trị stock hợp lệ
+    if (stock === undefined || stock < 0) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Số lượng sách không hợp lệ. Vui lòng nhập số dương.' 
+      });
+    }
+
+    // Cập nhật số lượng cho tất cả sách
+    const result = await Book.updateMany(
+      {}, // Không có điều kiện = cập nhật tất cả
+      { stock: stock },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Đã cập nhật số lượng ${stock} cho ${result.modifiedCount} cuốn sách`,
+      updatedCount: result.modifiedCount,
+      matchedCount: result.matchedCount
+    });
+  } catch (error: any) {
+    console.error('Lỗi khi cập nhật số lượng sách:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Lỗi máy chủ khi cập nhật số lượng sách',
+      error: error.message 
+    });
+  }
 }; 

@@ -2,41 +2,47 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user.model';
 
-interface AuthRequest extends Request {
-  user?: any;
+// Thêm định nghĩa cho interface Request để có thể gắn user vào
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
 }
 
-export const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      throw new Error();
+      return res.status(401).json({ message: 'Vui lòng đăng nhập để tiếp tục' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    const user = await User.findOne({ _id: (decoded as any)._id });
+    const user = await User.findById((decoded as any).id || (decoded as any)._id);
 
     if (!user) {
-      throw new Error();
+      return res.status(401).json({ message: 'Không tìm thấy người dùng' });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Please authenticate.' });
+    console.error('Auth middleware error:', error);
+    res.status(401).json({ message: 'Không được phép truy cập' });
   }
 };
 
-export const adminAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const adminAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     await auth(req, res, () => {
       if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Access denied. Admin only.' });
+        return res.status(403).json({ message: 'Quyền truy cập bị từ chối. Chỉ dành cho admin.' });
       }
       next();
     });
   } catch (error) {
-    res.status(401).json({ message: 'Please authenticate.' });
+    res.status(401).json({ message: 'Vui lòng đăng nhập để tiếp tục' });
   }
 }; 

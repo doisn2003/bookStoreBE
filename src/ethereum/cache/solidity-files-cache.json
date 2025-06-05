@@ -1,0 +1,40 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "D:\\bookStoreBE\\bookStoreBE\\src\\ethereum\\contracts\\BookPayment.sol": {
+      "lastModificationDate": 1748452144138,
+      "contentHash": "99d4b013f66be4bb5171c7cd7d039f65",
+      "sourceName": "src/ethereum/contracts/BookPayment.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "BookPayment"
+      ]
+    }
+  }
+}

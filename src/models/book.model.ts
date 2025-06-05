@@ -84,7 +84,7 @@ const bookSchema = new Schema<IBook>(
     stock: {
       type: Number,
       min: 0,
-      default: 0,
+      default: 100,//số lượng sách có sẵn
     },
     isbn: {
       type: String,
