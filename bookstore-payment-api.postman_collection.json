@@ -1,0 +1,253 @@
+{
+  "info": {
+    "_postman_id": "bb23c8a1-5f6b-4d23-b7ca-4e0e9fac5a23",
+    "name": "BookStore Payment API",
+    "description": "API Collection để test chức năng thanh toán của BookStore",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Đăng nhập",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Đăng nhập để lấy token xác thực"
+          },
+          "response": []
+        }
+      ],
+      "description": "Xác thực người dùng"
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Tạo thanh toán COD",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"userId\": \"{{userId}}\",\n  \"method\": \"cash_on_delivery\",\n  \"amount\": 200000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments"]
+            },
+            "description": "Tạo giao dịch thanh toán khi nhận hàng"
+          },
+          "response": []
+        },
+        {
+          "name": "Tạo thanh toán Bank Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"userId\": \"{{userId}}\",\n  \"method\": \"bank_transfer\",\n  \"amount\": 200000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments"]
+            },
+            "description": "Tạo giao dịch thanh toán chuyển khoản ngân hàng"
+          },
+          "response": []
+        },
+        {
+          "name": "Xác nhận thanh toán COD",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/cod/{{paymentId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "cod", "{{paymentId}}"]
+            },
+            "description": "Xác nhận thanh toán khi nhận hàng"
+          },
+          "response": []
+        },
+        {
+          "name": "Xác nhận thanh toán Bank Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bankName\": \"Techcombank\",\n  \"accountNumber\": \"1234567890\",\n  \"referenceCode\": \"REF123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/bank-transfer/{{paymentId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "bank-transfer", "{{paymentId}}"]
+            },
+            "description": "Xác nhận thanh toán chuyển khoản ngân hàng"
+          },
+          "response": []
+        },
+        {
+          "name": "Lấy thanh toán theo ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/payments/{{paymentId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "{{paymentId}}"]
+            },
+            "description": "Lấy thông tin chi tiết của một giao dịch thanh toán"
+          },
+          "response": []
+        },
+        {
+          "name": "Lấy thanh toán của người dùng",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/payments/user/{{userId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "user", "{{userId}}"]
+            },
+            "description": "Lấy danh sách thanh toán của một người dùng"
+          },
+          "response": []
+        },
+        {
+          "name": "Hủy thanh toán",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/payments/cancel/{{paymentId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "cancel", "{{paymentId}}"]
+            },
+            "description": "Hủy một giao dịch thanh toán đang trong trạng thái chờ"
+          },
+          "response": []
+        }
+      ],
+      "description": "Các API liên quan đến thanh toán"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "paymentId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+} 

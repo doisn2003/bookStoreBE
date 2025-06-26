@@ -3,7 +3,11 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
-
+import bookRoutes from './routes/book.routes';
+import categoryRoutes from './routes/category.routes';
+import orderRoutes from './routes/order.routes';
+import cartRoutes from './routes/cart.routes';
+import paymentRoutes from './routes/payment.routes';
 dotenv.config();
 
 const app = express();
@@ -14,6 +18,11 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/books', bookRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Connect to MongoDB
 mongoose
